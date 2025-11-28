@@ -111,7 +111,7 @@ vercel --prod
 vercel env ls
 # Check BASE_URL value
 vercel env add BASE_URL production
-# Enter: https://your-waitlist-api-abc123.vercel.app
+# Enter: https://yourwebsite.com
 ```
 
 Then redeploy: `vercel --prod`
@@ -126,12 +126,12 @@ Then redeploy: `vercel --prod`
 
 ### "Already subscribed" when it's a new email
 
-**Likely cause:** The email is already in the database from previous testing.
+**Likely cause:** The email is already in the database.
 
 **Fix:** 
 1. Go to Supabase dashboard → Table Editor → `waitlist` table
 2. Search for the email address
-3. Delete the test entry if found
+3. Delete the entry if found if you need to
 
 ### Rate limiting too strict / legitimate users blocked
 
@@ -155,21 +155,6 @@ Or disable rate limiting by removing Upstash environment variables.
 4. Domain matches between Turnstile widget and your site
 
 ## Database & Contacts
-
-### Do I need to run both setup.sql files?
-
-**No!** Just run `setup.sql` - it includes everything (waitlist + contacts).
-
-The old `migration-v2-contacts.sql` was renamed to `setup.sql` and is now the only setup file you need.
-
-### What if I have existing waitlist data?
-
-Run `setup.sql` (it's safe - won't break existing data), then migrate:
-
-```sql
-SELECT public.migrate_waitlist_to_contacts();
-SELECT public.populate_waitlist_contact_ids();
-```
 
 ### Can I use the database with a different email service?
 
@@ -213,7 +198,7 @@ See `the-widget/templates/TEMPLATE_README.md` for detailed instructions.
    - Enforced: 250px maximum (auto-scaled if larger)
    - Formats: PNG, JPG, or SVG
 
-**Note:** Branded templates include a professional gradient placeholder logo by default (with transparent background), so you'll always have a logo even before adding your own. Use `brandedHeaderTextOnly: true` if you prefer a text-only header with colored background.
+**Note:** Branded templates include a gradient placeholder that you can replace with your own logo. Use `brandedHeaderTextOnly: true` if you prefer a text-only header with colored background.
 
 ### How do I style the form?
 
@@ -226,7 +211,7 @@ The form uses scoped CSS classes (`.waitlist-form__*`) in `assets/waitlist-form.
 
 ### Can I disable double opt-in?
 
-**Yes!** Set the environment variable:
+**Yes, but FYI, this is not recommended.** Set the environment variable:
 
 ```bash
 vercel env add DOUBLE_OPTIN production
@@ -239,7 +224,7 @@ Then redeploy: `vercel --prod`
 
 ## Costs & Limits
 
-### How much does this cost?
+### How much will this cost me?
 
 **Free tier covers most indie projects:**
 
@@ -263,7 +248,7 @@ Then redeploy: `vercel --prod`
 
 ### Can I use this with React/Next.js/Astro/etc.?
 
-**Yes!** The API is framework-agnostic. The frontend files (`assets/`) are vanilla JavaScript that work with any framework.
+**Yep.** The API is framework-agnostic. The frontend files (`assets/`) are vanilla JavaScript that work with any framework.
 
 **For React/Next.js:** Adapt `assets/waitlist-form.js` to React hooks.
 
@@ -273,7 +258,7 @@ See the main [README.md](../README.md) for framework-specific instructions.
 
 ### Do I need to modify the code to use this?
 
-**No!** The widget works out of the box. You only need to:
+**Nope.** The widget works out of the box. You only need to:
 1. Run `setup.sql` in Supabase
 2. Set up Resend
 3. Deploy to Vercel
@@ -287,12 +272,6 @@ See the main [README.md](../README.md) for framework-specific instructions.
 - **API code** (`api/*.js`): Uses Resend by default, but can be customized
 
 If you customize the API to use a different email service, the database continues to work fine.
-
-## Still Have Questions?
-
-- Check the [Quick Start Guide](QUICKSTART.md) for step-by-step setup (same folder)
-- See [TEST_SUITE.md](TEST_SUITE.md) for testing help (same folder)
-- Review the main [README.md](../README.md) for detailed documentation
 
 ## Unsubscribe & Compliance
 
@@ -324,7 +303,13 @@ unsubscribeFooter: "You're receiving this email because you're subscribed to our
 
 ### Can users resubscribe after unsubscribing?
 
-Currently, users would need to sign up again through the waitlist form. The system will create a new contact entry or update the existing one to re-enable emails.
+Currently, users would need to sign up again through the waitlist form.
+
+## Still Have Questions?
+
+- Check the [Quick Start Guide](QUICKSTART.md) for step-by-step setup (same folder)
+- See [TEST_SUITE.md](TEST_SUITE.md) for testing help (same folder)
+- Review the main [README.md](../README.md) for detailed documentation
 
 **Future CRM features** will include preference management for easier resubscription.
 
