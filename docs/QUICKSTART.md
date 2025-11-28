@@ -2,39 +2,6 @@
 
 Get your waitlist widget up and running in minutes. **Perfect for beginners!** 🚀
 
-## How This Works (Important!)
-
-**You will need to install the API on its own server, and then use the drop-in code on your site.**
-
-1. **The API (deployed to Vercel)** - This handles all the backend work:
-   - Receives signup requests
-   - Stores data in Supabase
-   - Sends confirmation emails
-   - Handles email confirmations
-   - **This is a one-time setup** - you deploy it once to Vercel
-
-2. **Your Jekyll Site (wherever it's hosted)** - This is your existing website:
-   - Can be on GitHub Pages, Netlify, your own server, anywhere
-   - You just add the form files (CSS/JS/HTML) to your existing site
-   - The form on your site sends requests to the API on Vercel
-   - **No changes to your hosting** - your Jekyll site stays where it is
-
-**Think of it like this:**
-- Your Jekyll site = The front door of your house (where visitors see the form)
-- The Vercel API = The mailbox service (handles the signups and emails)
-- They communicate over the internet, but are completely separate
-
-**You don't need to:**
-- Move your Jekyll site to a new server
-- Install anything on your Jekyll site's server
-- Run any code on your Jekyll site's server
-
-**You just need to:**
-- Deploy the API to Vercel (one-time, takes 5 minutes)
-- Copy some files to your Jekyll site (the form, CSS, and JS)
-- Point the form to your Vercel API URL
-
----
 
 ## What You'll Need
 
@@ -48,7 +15,7 @@ Get your waitlist widget up and running in minutes. **Perfect for beginners!** �
 - ⚙️ [Upstash](https://upstash.com) account for rate limiting (free tier: 10k requests/day)
 - ⚙️ [Cloudflare](https://cloudflare.com) account for CAPTCHA (always free)
 
-**Time needed:** 15-30 minutes (mostly waiting for domain verification)
+**Time needed:** 30 minutes to 1 hour (mostly waiting for domain verification)
 
 ## Step 1: Database Setup (Supabase)
 
@@ -126,6 +93,7 @@ The database includes a `user_id` column in the `contacts` table that's ready to
 - `api/` folder
 - `package.json`
 - `vercel.json`
+- `env.example` file
 - Other files
 
 ---
@@ -145,205 +113,130 @@ npm install
 
 ---
 
-#### Step 3.3: Install Vercel CLI (If Needed)
+#### Step 3.3: Create Your Environment File
 
-**What this means:** Install the Vercel command-line tool so you can deploy.
-
-**How to do it:**
-```bash
-npm install -g vercel
-```
-
-**Note:** If you already have Vercel CLI installed, you can skip this step. If you get an error about permissions, you might need to use `sudo` (Mac/Linux) or run as administrator (Windows).
-
----
-
-#### Step 3.4: Login to Vercel
-
-**What this means:** Connect your terminal to your Vercel account.
+**What this means:** Create a local copy of the environment file, fill in your values, then upload it to Vercel.
 
 **How to do it:**
-```bash
-vercel login
-```
+1. **Copy the example file:**
+   ```bash
+   cp env.example .env.local
+   ```
 
-**What happens:**
-- Your browser will open
-- You'll be asked to log in to Vercel (or create an account if you don't have one)
-- After logging in, your terminal will be connected
+2. **Open `.env.local` in a text editor** (like VS Code, Notepad, or TextEdit)
 
-**Wait for the success message** before continuing.
+3. **Fill in your REQUIRED values** (replace the placeholder text):
+   - `SUPABASE_URL` → Paste your Supabase Project URL (from Step 1)
+   - `SUPABASE_SERVICE_KEY` → Paste your Supabase service_role key (from Step 1)
+   - `RESEND_API_KEY` → Paste your Resend API key (from Step 2, starts with `re_`)
+   - `FROM_EMAIL` → Enter: `Your Project Name <hello@yourdomain.com>`
+     - Replace "Your Project Name" with your actual project name
+     - Replace `hello@yourdomain.com` with an email from your verified Resend domain
+   - `BASE_URL` → Enter your website URL: `https://yourdomain.com`
+     - ⚠️ **Important:** This is your WEBSITE URL, NOT the Vercel API URL
+   - `CORS_ALLOWED_ORIGINS` → Enter your domains: `https://yourdomain.com,https://www.yourdomain.com`
+     - Separate multiple domains with commas
 
----
+4. **Optional values (can leave as-is or blank):**
+   - Email branding (`EMAIL_PROJECT_NAME`, `EMAIL_PRIMARY_COLOR`, etc.) - can leave as-is, has defaults
+   - Optional features (`RESEND_AUDIENCE_ID`, `TURNSTILE_SECRET_KEY`, `UPSTASH_*`, etc.) - leave blank if not using
+   - Redirect URLs - can leave as-is, rarely need to change
 
-#### Step 3.5: Link Your Project to Vercel
+5. **Save the file**
 
-**What this means:** Tell Vercel about this project and create a connection.
+**💡 Tip:** The `.env.local` file is automatically ignored by git (won't be committed), so it's safe to store your secrets there.
 
-**How to do it:**
-```bash
-vercel
-```
-
-**Follow the prompts:**
-- **Link to existing project?** → Type `N` and press Enter (this is your first time)
-- **What's your project's name?** → Press Enter (uses default name, or type a custom name)
-- **In which directory is your code located?** → Press Enter (uses current directory: `./`)
-- **Want to override the settings?** → Type `N` and press Enter
-
-**What this does:** Creates a `.vercel` folder in `the-widget/` that stores your project connection.
-
----
-
-#### Step 3.6: Add Environment Variables
-
-**What this means:** Tell Vercel your API keys and configuration so the API can work.
-
-**Important:** You must run these commands **while in the `the-widget` folder**. Each command will prompt you to paste a value.
-
-**Required variables (add these one at a time):**
-
-```bash
-# 1. Resend API Key
-vercel env add RESEND_API_KEY
-# When prompted, paste your Resend API key (starts with re_)
-# Select environment: Press Enter for all (Development, Preview, Production)
-
-# 2. Supabase URL
-vercel env add SUPABASE_URL
-# When prompted, paste your Supabase Project URL (from Step 1)
-# Select environment: Press Enter for all
-
-# 3. Supabase Service Key
-vercel env add SUPABASE_SERVICE_KEY
-# When prompted, paste your Supabase service_role key (from Step 1)
-# Select environment: Press Enter for all
-
-# 4. FROM_EMAIL
-vercel env add FROM_EMAIL
-# When prompted, enter: "Your Project Name <hello@yourdomain.com>"
-# Replace with your actual project name and verified Resend domain email
-# Select environment: Press Enter for all
-```
-
-**About BASE_URL:** You'll set this after deployment (see Step 3.9). For now, skip it.
-
-**Optional variables (skip these for now, add later if needed):**
-```bash
-# Rate limiting (optional)
-vercel env add UPSTASH_REDIS_REST_URL
-vercel env add UPSTASH_REDIS_REST_TOKEN
-
-# CAPTCHA (optional)
-vercel env add TURNSTILE_SECRET_KEY
-
-# Disable double opt-in (optional)
-vercel env add DOUBLE_OPTIN
-# Enter: false (if you want to skip email confirmation)
-```
+**✅ Checkpoint:** You should have a `.env.local` file with all your REQUIRED values filled in.
 
 ---
 
-#### Step 3.7: Configure CORS
-
-**What this means:** Tell the API which websites are allowed to use it (security feature).
-
-**How to do it:**
-```bash
-vercel env add CORS_ALLOWED_ORIGINS
-```
-
-**When prompted:**
-- Enter your domains as a comma-separated list
-- Example: `https://mysite.com,https://www.mysite.com`
-- Select environment: Press Enter for all (Development, Preview, Production)
-
-**Example:** If your site is `https://mysite.com`, enter:
-```
-https://mysite.com,https://www.mysite.com
-```
-
-**Note:** Local development servers (`localhost:3000`, `localhost:4000`) are always allowed automatically.
-
----
-
-#### Step 3.8: Deploy to Production
+#### Step 3.4: Deploy to Vercel
 
 **What this means:** Upload your API code to Vercel so it's live on the internet.
 
-**How to do it:**
-```bash
-vercel --prod
-```
+**Choose one method:**
 
-**What happens:**
-- Vercel uploads your code
-- It builds and deploys the API
-- You'll see a URL like: `https://your-waitlist-api-abc123.vercel.app`
-- **Copy this URL!** You'll need it for your Jekyll site
+**Method A: Deploy via Vercel Dashboard** ⭐ *Recommended for beginners*
 
-**✅ Checkpoint:** Your API is now live! Try visiting the URL - you should see "Not Found" (that's normal, the API only responds to `/api/subscribe`).
+1. **Go to [vercel.com/dashboard](https://vercel.com/dashboard)**
+2. **Click "Add New" → "Project"**
+3. **Import your repository:**
+   - If your code is on GitHub/GitLab/Bitbucket, connect your account and select the repository
+   - If your code is local only, you can use Method B below
+4. **Configure the project:**
+   - **Root Directory:** Set to `the-widget` (important!)
+   - **Framework Preset:** Leave as default or select "Other"
+   - **Build Command:** Leave empty (no build needed)
+   - **Output Directory:** Leave empty
+5. **Add environment variables:**
+   - Click "Environment Variables" (or expand the section)
+   - Click "Import" (or "Add" → "Import from .env file")
+   - Select your `.env.local` file from the `the-widget` folder
+   - Click "Import"
+   - **Review and update values** by clicking on each variable:
+     - Make sure all REQUIRED variables have your actual values (not placeholders)
+     - For `BASE_URL`, set environment to **Production** only (click the variable, then change environment dropdown)
+     - **Optional variables:** You can delete unused variables or leave them blank - they won't cause issues
+6. **Click "Deploy"**
+7. **Wait for deployment to complete** (usually 1-2 minutes)
+8. **Copy your deployment URL** (looks like `https://your-waitlist-api-abc123.vercel.app`)
+
+**Method B: Deploy via CLI** *For advanced users*
+
+1. **Install Vercel CLI** (if you don't have it):
+   ```bash
+   npm install -g vercel
+   ```
+
+2. **Login to Vercel:**
+   ```bash
+   vercel login
+   ```
+   (Opens browser to authenticate)
+
+3. **Deploy:**
+   ```bash
+   vercel --prod
+   ```
+
+4. **After deployment, import environment variables:**
+   - Go to [vercel.com/dashboard](https://vercel.com/dashboard)
+   - Click on your project
+   - Go to **Settings** → **Environment Variables**
+   - Click "Import" and select your `.env.local` file from `the-widget` folder
+   - Review and update values by clicking on each variable (make sure REQUIRED values are filled in)
+   - **Important:** For `BASE_URL`, set it to **Production** environment only
+
+**✅ Checkpoint:** Your API should be live! Visit your deployment URL - you should see "Not Found" (that's normal, the API only responds to `/api/subscribe`).
 
 ---
 
-#### Step 3.9: Set BASE_URL Environment Variable
+#### Step 3.5: Verify Your Deployment
 
-**What this means:** Tell the API what URL to use when generating confirmation email links. This should be your **Jekyll site's URL**, not the Vercel API URL.
-
-**How to do it:**
-```bash
-vercel env add BASE_URL production
-```
-
-**When prompted:**
-- Enter your **Jekyll site's URL** (where users will see the confirmation pages)
-- Example: `https://mysite.com` or `https://www.mysite.com`
-- **Important:** 
-  - Use `https://` (not `http://`) for production
-  - This is your **website URL**, NOT the Vercel API URL
-  - This is where users will be redirected after clicking confirmation links
-- Select environment: Choose `Production` (or press Enter if it's the only option)
-
-**Why this matters:** 
-- When users click confirmation links in emails, the API redirects them to your Jekyll site
-- The confirmation pages (`waitlist-confirmed.html` and `waitlist-error.html`) are on your Jekyll site
-- The API uses `BASE_URL` to build the confirmation link URLs in emails
-
-**Example:**
-- If your Jekyll site is at `https://mysite.com`, enter: `https://mysite.com`
-- If your Jekyll site is at `https://www.mysite.com`, enter: `https://www.mysite.com`
-- **Do NOT** enter your Vercel API URL here (like `https://your-api.vercel.app`)
-
----
-
-#### Step 3.10: Verify Deployment
-
-**What this means:** Make sure everything is working.
+**What this means:** Make sure everything is set up correctly.
 
 **How to check:**
 1. Go to [vercel.com/dashboard](https://vercel.com/dashboard)
-2. Find your project (should be named something like "waitlist-widget" or what you named it)
-3. Click on it
-4. Go to **Settings** → **Environment Variables**
-5. Verify all your variables are there:
+2. Find your project and click on it
+3. Go to **Settings** → **Environment Variables**
+4. Verify all your variables are there:
    - ✅ `RESEND_API_KEY`
    - ✅ `SUPABASE_URL`
    - ✅ `SUPABASE_SERVICE_KEY`
    - ✅ `FROM_EMAIL`
-   - ✅ `BASE_URL` (should be your Jekyll site URL)
+   - ✅ `BASE_URL` (should be your website URL, set to Production only)
+   - ✅ `CORS_ALLOWED_ORIGINS` (should include your domains)
 
-**If anything is missing, add it using `vercel env add VARIABLE_NAME production`**
-
----
+**If anything is missing:**
+- In Vercel dashboard, click "Add" and manually add any missing variables
+- Make sure to set the correct environment (Production, Development, Preview) for each variable
 
 **✅ Checkpoint:** Your API is deployed and ready! You should have:
-- A Vercel URL like `https://your-waitlist-api-abc123.vercel.app`
-- All environment variables set
+- A Vercel URL like `https://your-waitlist-api-abc123.vercel.app` - **copy this!**
+- All environment variables set correctly
 - CORS configured for your domain
 
 **Next:** You'll use this Vercel URL in your Jekyll site's form (Step 4).
-
-**✅ Checkpoint:** Your API should be live! Try visiting your deployment URL - you should see "Not Found" (that's normal, the API only responds to `/api/subscribe`).
 
 ## Step 4: Add to Your Site
 
@@ -594,10 +487,40 @@ See the main [README.md](../README.md) for framework-specific instructions. The 
 **When to add:** If you plan to send marketing/newsletter emails to confirmed waitlist subscribers.
 
 **Quick setup:**
-1. Create an Audience at [resend.com/audiences](https://resend.com/audiences)
-2. Add to Vercel: `vercel env add RESEND_AUDIENCE_ID production`
-3. Set up webhooks at [resend.com/webhooks](https://resend.com/webhooks) pointing to `https://your-api.vercel.app/api/webhooks/resend`
-4. Redeploy: `vercel --prod`
+
+1. **Create a Resend Audience:**
+   - Go to [resend.com/audiences](https://resend.com/audiences)
+   - Click "Create Audience"
+   - Name it (e.g., "Waitlist Confirmed")
+   - Copy the Audience ID
+
+2. **Add to Vercel:**
+   - Go to your Vercel project → **Settings** → **Environment Variables**
+   - Click "Add"
+   - Name: `RESEND_AUDIENCE_ID`
+   - Value: Paste your Audience ID
+   - Environment: Select "All" (or just "Production")
+   - Click "Save"
+
+3. **Set up webhooks:**
+   - Go to [resend.com/webhooks](https://resend.com/webhooks)
+   - Click "Add Webhook"
+   - Endpoint URL: `https://your-api.vercel.app/api/webhooks/resend` (replace with your actual Vercel URL)
+   - Select events: `email.bounced`, `email.complained`, `contact.unsubscribed`
+   - Copy the signing secret
+
+4. **Add webhook secret:**
+   - In Vercel dashboard → **Settings** → **Environment Variables**
+   - Click "Add"
+   - Name: `RESEND_WEBHOOK_SECRET`
+   - Value: Paste the signing secret
+   - Environment: Select "All"
+   - Click "Save"
+
+5. **Redeploy:**
+   - In Vercel dashboard, go to **Deployments**
+   - Click the three dots (⋯) on your latest deployment
+   - Click "Redeploy"
 
 **For detailed setup instructions**, see the main [README.md](../README.md#2b-set-up-resend-contacts-sync-optional).
 
@@ -607,17 +530,26 @@ See the main [README.md](../README.md) for framework-specific instructions. The 
 
 **When to add:** If you're getting spam signups or want extra protection.
 
-1. Create account at [upstash.com](https://upstash.com) (free tier: 10k requests/day)
-2. Create a new Redis database
-3. Copy the REST URL and REST Token
-4. Add to Vercel:
-   ```bash
-   vercel env add UPSTASH_REDIS_REST_URL production
-   vercel env add UPSTASH_REDIS_REST_TOKEN production
-   ```
-5. Redeploy: `vercel --prod`
+1. **Create account at [upstash.com](https://upstash.com)** (free tier: 10k requests/day)
+2. **Create a new Redis database:**
+   - Click "Create Database"
+   - Choose a name (e.g., "Waitlist Rate Limiting")
+   - Select a region close to you
+   - Click "Create"
+3. **Get your credentials:**
+   - Copy the **REST URL** → `UPSTASH_REDIS_REST_URL`
+   - Copy the **REST TOKEN** → `UPSTASH_REDIS_REST_TOKEN`
+4. **Add to Vercel:**
+   - Go to your Vercel project → **Settings** → **Environment Variables**
+   - Click "Add" for each:
+     - Name: `UPSTASH_REDIS_REST_URL`, Value: Your REST URL
+     - Name: `UPSTASH_REDIS_REST_TOKEN`, Value: Your REST TOKEN
+   - Environment: Select "All"
+   - Click "Save" for each
+5. **Redeploy:**
+   - In Vercel dashboard → **Deployments** → Click three dots (⋯) → "Redeploy"
 
-**Default limit:** 5 signups per IP per hour (you can change this in `api/shared/config.js` - edit `RATE_LIMIT_CONFIG`)
+**Default limit:** 5 signups per IP per hour (you can change this in `api/shared/config.js` if needed).
 
 ## Optional: Add CAPTCHA
 
@@ -625,12 +557,25 @@ See the main [README.md](../README.md) for framework-specific instructions. The 
 
 **When to add:** If you're getting bot signups.
 
-1. Go to [Cloudflare Dashboard → Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile)
-2. Add a new site
-3. Get your keys:
-   - **Site key** → goes in your Jekyll include (see below)
-   - **Secret key** → add to Vercel: `vercel env add TURNSTILE_SECRET_KEY`
-4. Redeploy: `vercel --prod`
+1. **Go to [Cloudflare Dashboard → Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile)**
+2. **Add a new site:**
+   - Click "Add Site"
+   - Enter a site name (e.g., "Waitlist Widget")
+   - Choose your domain (or use "localhost" for testing)
+   - Select widget mode (recommended: "Managed" for invisible CAPTCHA)
+   - Click "Create"
+3. **Get your keys:**
+   - **Site key** → You'll add this to your website's form (see Step 4)
+   - **Secret key** → Add to Vercel (see below)
+4. **Add secret key to Vercel:**
+   - Go to your Vercel project → **Settings** → **Environment Variables**
+   - Click "Add"
+   - Name: `TURNSTILE_SECRET_KEY`
+   - Value: Paste your secret key
+   - Environment: Select "All"
+   - Click "Save"
+5. **Redeploy:**
+   - In Vercel dashboard → **Deployments** → Click three dots (⋯) → "Redeploy"
 
 **Add CAPTCHA to your form:**
 In your Jekyll page, update the include:
@@ -665,8 +610,14 @@ Replace `0x4AAAAAAA...` with your actual site key from Cloudflare.
 
 ### Confirmation link doesn't work
 - Make sure `waitlist-confirmed.html` and `waitlist-error.html` are in your site's root folder
-- Check that `BASE_URL` in Vercel matches your site's domain
+- Check that `BASE_URL` in Vercel matches your site's domain (and is set to Production environment)
 - Verify the confirmation pages are deployed with your site
+
+### Environment variables not working
+- In Vercel dashboard → **Settings** → **Environment Variables**, verify all variables are set
+- Make sure `BASE_URL` is set to **Production** environment only
+- After adding/changing variables, redeploy your project:
+  - Go to **Deployments** → Click three dots (⋯) on latest deployment → "Redeploy"
 
 ## Next Steps
 
