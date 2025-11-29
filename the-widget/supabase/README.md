@@ -68,13 +68,16 @@ The setup script is **backward compatible**. The waitlist widget will work with 
 
 ## What Gets Created
 
-- `waitlist` table - Stores waitlist signups
+- `waitlist` table - Stores waitlist signups (linked to contacts via `contact_id`)
 - `contacts` table - Unified email identity (single source of truth)
+  - Email status: `email_verified`, `email_bounced`, `email_unsubscribed`
+  - Lifecycle tracking: `first_seen_at`, `last_contacted_at`
   - Optional `user_id` column for Supabase Auth integration (links to `auth.users` when contact creates account)
   - NULL for waitlist signups that never create accounts - this is expected and safe
-- `waitlist_stats` view - Statistics view
-- Helper functions - `get_or_create_contact()`, migration functions, etc.
-- Indexes - For performance (including `contacts_user_id_idx` for fast auth user lookups)
+- `contact_activity` table - Timeline tracking for all contact interactions (optional, for CRM features)
+- `waitlist_stats` view - Statistics view (includes `unique_contacts` count)
+- Helper functions - `get_or_create_contact()`, migration functions, merge/deduplication functions, etc.
+- Indexes - For performance (including `email_normalized` for fast lookups, `contacts_user_id_idx` for auth user lookups)
 - Row Level Security - Service role only access
 
 ## Next Steps

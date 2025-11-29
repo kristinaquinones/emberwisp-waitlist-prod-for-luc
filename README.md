@@ -1,9 +1,10 @@
-# Waitlist API (v1)
+# emberwisp waitlist widget (v1)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/sturdy-barnacle/emberwisp-waitlist)
 
 Simple, tinkerer-friendly, mostly-drop-in waitlist widget built to work on static sites: Jekyll, plain HTML, React, Astro, Hugo, or anything that can POST JSON.
+
 
 **New to this project?** Check out the [Quick Start Guide](docs/QUICKSTART.md) to get up and running in minutes.
 
@@ -11,24 +12,37 @@ Simple, tinkerer-friendly, mostly-drop-in waitlist widget built to work on stati
 
 ---
 
+## FYI
+While this widget is customizable for use with probably whatever set up you've got, it was created with the following stack in mind:
+| Name | Layer | Is this layer required? |
+|---|---|---|
+| Jekyll | website/blog framework / you have a website, yeah? | yes |
+| Supabase | database / where subscriber info gets stored | yes |
+| Resend | email API / what does the sending | yes |
+| Upstash | database / used for rate limiting | no |
+| Cloudflare Turnstile | CAPTCHA / anti-spam | no |
+
+Could you use _just_ Supabase for both subscriber info and rate limiting? Technically yes, but Upstash Redis is better for the type and speed of data transfer required for this feature. Anyway, it's also got a very generous free tier. 😉
+
+| |	Upstash Redis | Supabase |
+|---|---|---|
+| Speed | ~1-5ms (in-memory)	| ~50-100ms (database query) |
+| Atomicity	| Built-in atomic INCR	| Requires transactions/locks |
+| TTL	| Automatic key expiration	| Need cleanup job or triggers |
+| Complexity	| @upstash/ratelimit does everything	| Custom implementation needed |
+| Free tier? | yes | yes |
+
+---
+
 ## ⚠️ Important: How This Works
 
 **This is a drop-in plugin with a separate API backend:**
 
-- **The API** (this repository) → Deploy to **Vercel** (one-time setup, takes 5 minutes)
-- **Your website** (Jekyll, React, etc.) → Stays **wherever it's already hosted** (GitHub Pages, Netlify, your server, etc.)
+- **The API** (`the-widget` from this repository) → Deploy to **Vercel**
+     - This is a one-time setup and shouldn't take more than 30min to an hour, including time spent signing up for (the free tier of) required services that you don't have yet, template customization, and testing. 
+- **Your website** (Jekyll, React, etc.) → Stays **wherever it's already hosted** (Could be a separate project instance on Vercel, GitHub Pages, Netlify, etc.)
 - **The form** → You copy some files (CSS/JS/HTML) to your existing website
 - **They communicate** → Your form sends requests to the API you just deployed
-
-**You do NOT need to:**
-- Move your website to a new server
-- Install anything on your website's server
-- Run any backend code on your website's server
-
-**You DO need to:**
-- Deploy the API to Vercel (separate from your website)
-- Copy form files to your website
-- Point the form to your Vercel API URL
 
 ## Features
 
@@ -87,10 +101,15 @@ Simple, tinkerer-friendly, mostly-drop-in waitlist widget built to work on stati
               │    (Supabase)     │◄────────────►│     (Optional)        │
               │                   │   Two-way    │                       │
               │  waitlist         │    sync      │  Audience for         │
-              │  contacts         │              │  marketing emails     │
+              │    └─contact_id──┼──contacts    │  marketing emails     │
               │  contact_activity │              │                       │
               └───────────────────┘              └───────────────────────┘
 ```
+
+**Database relationships:**
+- `waitlist.contact_id` → `contacts.id` - Links each signup to a unified contact
+- One contact can have multiple waitlist signups from different sources
+- `contacts.user_id` → `auth.users.id` - Optional link to Supabase Auth users
 
 ## Framework Compatibility
 
@@ -100,7 +119,7 @@ The API (`api/` folder) is **completely framework-agnostic**: any frontend that 
 |-----------|---------------------|----------|
 | `api/*` | No: works with anything | Just deploy to Vercel |
 | `api/shared/*` | No: shared utilities | Modify if customizing email service |
-| `supabase/setup.sql` | No: just SQL | Run in Supabase SQL Editor |
+| `the-widget/supabase/setup.sql` | No: just SQL | Run in Supabase SQL Editor |
 | `assets/waitlist-form.css` | No: pure CSS | Use as-is or customize |
 | `assets/waitlist-form.js` | No: vanilla JS | Use as-is or customize |
 | `jekyll/_includes/waitlist-form.html` | Light Jekyll (Liquid tags) | See below |
@@ -143,53 +162,42 @@ Move to `layouts/partials/`, replace Liquid (`{{ include.x }}`) with Go templati
 **Webflow / Squarespace / No-code:**
 Upload `assets/waitlist-form.css` and `assets/waitlist-form.js` to your site's assets folder, then embed the HTML from `waitlist-form.html` in a custom code block. Set data attributes: `data-api-url`, `data-source`, `data-turnstile-site-key`.
 
-## Quick Start
+## Setup
 
-> **New to this project?** See the [Quick Start Guide](docs/QUICKSTART.md) for a condensed setup walkthrough.
+> **📖 For step-by-step setup instructions, see the [Quick Start Guide](docs/QUICKSTART.md).**
 
-For detailed setup instructions, continue reading:
+**Quick overview:**
 
-### 1. Set Up Supabase
+1. **Supabase** - Create project, run `the-widget/supabase/setup.sql`, get API credentials
+2. **Resend** - Create account, verify domain, create API key
+3. **Vercel** - Deploy `the-widget/` folder, import `.env.local` with your credentials
+4. **Your Site** - Copy form files and add to your website
 
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to **SQL Editor** and run `supabase/setup.sql`
-3. Get credentials from **Settings → API**:
-   - Project URL → `SUPABASE_URL`
-   - Service role key → `SUPABASE_SERVICE_KEY`
+**What you'll need:**
+- [Supabase](https://supabase.com) account (free tier)
+- [Resend](https://resend.com) account (free tier: 3,000 emails/month)
+- [Vercel](https://vercel.com) account (free tier)
+- Node.js installed
 
-**What gets created:**
-- `waitlist` table for signups
-- `contacts` table for unified contact management (with unsubscribe tokens)
+**Optional (add later):**
+- [Upstash](https://upstash.com) for rate limiting (free tier: 10k requests/day)
+- [Cloudflare Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile) for CAPTCHA (always free)
+
+**⚠️ Important: Resend is Required**
+
+The provided API code (`api/subscribe.js` and `api/confirm.js`) **requires Resend** and is hardcoded to use it. If you want to use a different email service, you'll need to modify the API code. The database schema is email-service agnostic and will work with any provider.
+
+**What gets created in Supabase:**
+- `waitlist` table - Stores signup entries (linked to contacts via `contact_id`)
+- `contacts` table - Unified contact management (single source of truth for email identity)
+  - Email status fields: `email_verified`, `email_bounced`, `email_unsubscribed`
+  - Lifecycle tracking: `first_seen_at`, `last_contacted_at`
   - Optional `user_id` column for Supabase Auth integration (links to `auth.users` when contact creates account)
   - NULL for waitlist signups that never create accounts - this is expected and safe
-- `contact_activity` table for timeline tracking (optional)
-- Migration functions for existing data
-- Database merge and deduplication functions (optional)
-- Unsubscribe token generation function
-- Indexes for performance (including `unsubscribe_token` and `user_id`)
-
-### 2. Set Up Resend (Required)
-
-**⚠️ IMPORTANT: Resend is Required**
-
-The provided API code (`api/subscribe.js` and `api/confirm.js`) **requires Resend** and is hardcoded to use it. 
-
-- ✅ **Using Resend?** Follow the steps below - everything will work out of the box.
-- ❌ **Want to use a different email service?** You'll need to:
-  1. Modify `api/subscribe.js` - replace all `resend.emails.send()` calls
-  2. Modify `api/confirm.js` - replace all `resend.emails.send()` calls  
-  3. Update environment variables to match your email service
-  4. The database schema will work fine with any email service
-
-**Setting up Resend:**
-
-1. Create account at [resend.com](https://resend.com)
-2. **Verify your domain** in **Domains** (e.g., `yourdomain.com`)
-   - This is required! Emails can only be sent from verified domains
-   - Follow Resend's DNS setup instructions to verify your domain
-3. Create an API key → `RESEND_API_KEY`
-
-**Important:** The `FROM_EMAIL` environment variable (set in Step 5) must use an email address from your verified domain. For example, if you verified `yourdomain.com`, you can use `hello@yourdomain.com` or `noreply@yourdomain.com`. Resend will reject emails from unverified domains.
+- `contact_activity` table - Timeline tracking for all contact interactions (optional, for CRM features)
+- `waitlist_stats` view - Statistics including unique contacts count
+- Helper functions: `get_or_create_contact()`, migration functions, merge/deduplication functions, unsubscribe token generation
+- Indexes for performance (including `email_normalized` for fast lookups)
 
 ### 2b. Set Up Resend Contacts Sync (Optional)
 
@@ -197,7 +205,7 @@ The provided API code (`api/subscribe.js` and `api/confirm.js`) **requires Resen
 
 **What this does:** Syncs confirmed waitlist subscribers to a Resend Audience, enabling two-way sync of subscription preferences (bounces, unsubscribes).
 
-**Sync is automatic once configured.** A manual migration script is available to sync existing contacts from Supabase to Resend (see "Bulk sync existing contacts" below).
+**Sync is automatic once configured.** A manual migration script is available to sync existing contacts from Supabase to Resend.
 
 | Direction | Trigger | Automatic? |
 |-----------|---------|------------|
@@ -206,40 +214,14 @@ The provided API code (`api/subscribe.js` and `api/confirm.js`) **requires Resen
 | Resend → Supabase | Bounce/complaint/unsubscribe | ✅ Yes (webhook) |
 | Existing contacts | One-time migration | Manual script |
 
-**Setup:**
+**Quick setup:**
+1. Create a Resend Audience at [resend.com/audiences](https://resend.com/audiences)
+2. Add `RESEND_AUDIENCE_ID` to Vercel environment variables (via dashboard)
+3. Set up webhooks at [resend.com/webhooks](https://resend.com/webhooks) pointing to `https://your-api.vercel.app/api/webhooks/resend`
+4. Add `RESEND_WEBHOOK_SECRET` to Vercel environment variables
+5. Redeploy
 
-1. **Create a Resend Audience:**
-   - Go to [Resend Audiences](https://resend.com/audiences)
-   - Click "Create Audience"
-   - Name it (e.g., "Waitlist Confirmed")
-   - Copy the Audience ID
-
-2. **Add environment variable:**
-   ```bash
-   vercel env add RESEND_AUDIENCE_ID
-   # Paste your Audience ID when prompted
-   ```
-
-3. **Set up webhooks (for two-way sync):**
-   - Go to [Resend Webhooks](https://resend.com/webhooks)
-   - Click "Add Webhook"
-   - Set endpoint URL: `https://your-api.vercel.app/api/webhooks/resend`
-   - Select events: `email.bounced`, `email.complained`, `contact.unsubscribed`
-   - Copy the signing secret
-
-4. **Add webhook secret (recommended):**
-   ```bash
-   vercel env add RESEND_WEBHOOK_SECRET
-   # Paste signing secret when prompted
-   ```
-
-5. **Redeploy:** `vercel --prod`
-
-**How it works:**
-- When a user confirms their email → Added to Resend Audience
-- When a user unsubscribes via your app → Updated in Resend
-- When Resend detects a bounce/complaint → Updated in Supabase
-- All events logged in `contact_activity` table
+**For detailed setup instructions**, see [docs/QUICKSTART.md](docs/QUICKSTART.md#optional-resend-contacts-sync).
 
 **Bulk sync existing contacts:**
 ```bash
@@ -250,120 +232,33 @@ node scripts/sync-contacts-to-resend.js --dry-run
 node scripts/sync-contacts-to-resend.js
 ```
 
-### 3. Set Up Upstash (Rate Limiting)
-
-*Optional but recommended*
-
-1. Create account at [upstash.com](https://upstash.com)
-2. Create a new Redis database
-3. Copy your REST credentials:
-   - `UPSTASH_REDIS_REST_URL`
-   - `UPSTASH_REDIS_REST_TOKEN`
-
-### 4. Set Up Cloudflare Turnstile (CAPTCHA)
-
-*Optional*
-
-1. Go to [Cloudflare Dashboard → Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile)
-2. Add a new site
-3. Get your keys:
-   - Site key → goes in your Jekyll include
-   - Secret key → `TURNSTILE_SECRET_KEY`
-
-### 5. Deploy the API to Vercel
+### 3. Deploy the API to Vercel
 
 **What this does:** Deploys the `the-widget/` folder to Vercel as a serverless API. This is **separate from your website** - your website stays wherever it's hosted.
 
-**Step-by-step:**
+**Quick steps:**
+1. Navigate to `the-widget` folder: `cd the-widget`
+2. Install dependencies: `npm install`
+3. Create environment file: `cp env.example .env.local`
+4. Fill in **REQUIRED** values in `.env.local`:
+   - `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (from Step 1)
+   - `RESEND_API_KEY`, `FROM_EMAIL` (from Step 2)
+   - `BASE_URL` (your website URL)
+   - `CORS_ALLOWED_ORIGINS` (your domains)
+5. Deploy via Vercel dashboard (import `.env.local`) or CLI: `vercel --prod`
+6. Set `BASE_URL` to **Production** environment only in Vercel dashboard
 
-1. **Navigate to the widget folder:**
-   ```bash
-   cd the-widget
-   ```
+**📖 For detailed step-by-step instructions with ELI5 explanations, see [docs/QUICKSTART.md](docs/QUICKSTART.md#step-3-deploy-the-api-to-vercel).**
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+### Optional Features
 
-3. **Install Vercel CLI** (if you don't have it):
-   ```bash
-   npm install -g vercel
-   ```
+**Rate Limiting (Upstash):** Prevents spam by limiting signups per IP address. Default: 5 signups per IP per hour.
 
-4. **Login to Vercel:**
-   ```bash
-   vercel login
-   ```
-   (Opens browser to authenticate)
+**CAPTCHA (Cloudflare Turnstile):** Adds bot protection to your form.
 
-5. **Link your project:**
-   ```bash
-   vercel
-   ```
-   - Follow the prompts:
-     - Link to existing project? **No** (first time)
-     - Project name? Press Enter (uses default)
-     - Directory? Press Enter (uses current directory: `./`)
-     - Override settings? **No**
+**📖 For setup instructions**, see [docs/QUICKSTART.md](docs/QUICKSTART.md#optional-add-rate-limiting) and [docs/QUICKSTART.md](docs/QUICKSTART.md#optional-add-captcha).
 
-6. **Add environment variables** (run these commands **one at a time** while in the `the-widget` folder):
-   ```bash
-   # Required variables
-   vercel env add RESEND_API_KEY
-   # Paste your Resend API key when prompted
-   # Select environment: All (Development, Preview, Production)
-   
-   vercel env add SUPABASE_URL
-   # Paste your Supabase Project URL when prompted
-   # Select environment: All
-   
-   vercel env add SUPABASE_SERVICE_KEY
-   # Paste your Supabase service_role key when prompted
-   # Select environment: All
-   
-   vercel env add FROM_EMAIL
-   # Enter: "Your Project Name <hello@yourdomain.com>"
-   # Replace with your actual project name and verified Resend domain email
-   # Select environment: All
-   ```
-
-7. **Configure CORS** (tell the API which domains can use it):
-   ```bash
-   vercel env add CORS_ALLOWED_ORIGINS
-   # Enter comma-separated domains: https://yourdomain.com,https://www.yourdomain.com
-   ```
-
-8. **Deploy to production:**
-   ```bash
-   vercel --prod
-   ```
-   You'll get a URL like `https://your-waitlist-api-abc123.vercel.app` - **copy this!**
-
-9. **Set BASE_URL** (your Jekyll site's URL for confirmation emails):
-   ```bash
-   vercel env add BASE_URL production
-   # Enter your Jekyll site URL: https://yourdomain.com
-   # Important: This is your WEBSITE URL, NOT the Vercel API URL
-   # This is where users will see confirmation pages after clicking email links
-   ```
-
-**✅ Checkpoint:** Your API should be live! Visit your deployment URL - you should see "Not Found" (that's normal, the API only responds to `/api/subscribe`).
-
-**📖 For detailed step-by-step instructions with ELI5 explanations, see [docs/QUICKSTART.md](docs/QUICKSTART.md).**
-
-### 6. Configure CORS
-
-Set the `CORS_ALLOWED_ORIGINS` environment variable (comma-separated list of domains):
-
-```bash
-vercel env add CORS_ALLOWED_ORIGINS
-# Enter: https://yourdomain.com,https://www.yourdomain.com
-```
-
-Local development servers (`localhost:3000`, `localhost:4000`) are always allowed automatically.
-
-### 7. Add to Your Site
+### 4. Add to Your Site
 
 The `jekyll/` folder contains ready-to-use components. Adapt as needed for your framework.
 
@@ -521,14 +416,14 @@ Receives webhook events from Resend for two-way sync:
 
 ## Database Schema
 
-The database includes a unified contacts system that links waitlist signups to Supabase Auth users (when they create accounts).
+The database includes a unified contacts system that links waitlist signups to contacts and optionally to Supabase Auth users.
 
 **Main tables:**
 
 ```sql
--- Waitlist signups
+-- Waitlist signups (linked to contacts via contact_id)
 create table waitlist (
-  id uuid primary key,
+  id uuid primary key default gen_random_uuid(),
   email text unique not null,
   source text default 'website',
   created_at timestamptz default now(),
@@ -537,18 +432,51 @@ create table waitlist (
   confirmation_token text,
   token_expires_at timestamptz,
   metadata jsonb default '{}',
-  contact_id uuid references contacts(id) on delete cascade
+  contact_id uuid references contacts(id) on delete cascade -- Links to unified contact
 );
 
 -- Unified contacts (single source of truth for email identity)
 create table contacts (
-  id uuid primary key,
+  id uuid primary key default gen_random_uuid(),
   email text unique not null,
-  email_normalized text unique not null,
-  user_id uuid references auth.users(id) on delete set null, -- Optional: links to Supabase Auth
-  -- ... email preferences, unsubscribe tokens, etc.
+  email_normalized text unique not null, -- Lowercase, trimmed for deduplication
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  
+  -- Supabase Auth integration (optional)
+  user_id uuid references auth.users(id) on delete set null,
+  
+  -- Email status (email-service agnostic, updated via webhooks)
+  email_verified boolean default false,
+  email_verified_at timestamptz,
+  email_bounced boolean default false,
+  email_bounced_at timestamptz,
+  email_unsubscribed boolean default false,
+  email_unsubscribed_at timestamptz,
+  unsubscribe_token text unique, -- For secure unsubscribe links
+  
+  -- Lifecycle tracking
+  first_seen_at timestamptz default now(), -- First contact with this email
+  last_contacted_at timestamptz, -- Last time email was sent
+  
+  -- Flexible metadata
+  metadata jsonb default '{}'::jsonb
+);
+
+-- Contact activity timeline (optional, for CRM features)
+create table contact_activity (
+  id uuid primary key default gen_random_uuid(),
+  contact_id uuid references contacts(id) on delete cascade,
+  activity_type text not null, -- 'waitlist_signup', 'email_sent', etc.
+  activity_data jsonb default '{}'::jsonb,
+  created_at timestamptz default now()
 );
 ```
+
+**Key relationships:**
+- `waitlist.contact_id` → `contacts.id` - Links each waitlist signup to a unified contact
+- `contacts.user_id` → `auth.users.id` - Optionally links contacts to Supabase Auth users
+- `contact_activity.contact_id` → `contacts.id` - Timeline of all interactions
 
 **Supabase Auth Integration:**
 - The `contacts.user_id` column optionally links contacts to Supabase Auth users
@@ -570,9 +498,12 @@ Returns:
   "total_signups": 101,
   "confirmed_last_24h": 5,
   "confirmed_last_7d": 23,
-  "unique_sources": 3
+  "unique_sources": 3,
+  "unique_contacts": 95
 }
 ```
+
+**Note:** `unique_contacts` counts distinct contacts linked to waitlist entries (one contact can have multiple signups from different sources).
 
 ---
 
@@ -765,7 +696,7 @@ For common issues and solutions, see the [FAQ](docs/FAQ.md) section.
 - **Emails not sending:** Verify domain in Resend, check `FROM_EMAIL` matches
 - **Rate limiting not working:** Check Upstash credentials are set correctly
 - **CAPTCHA always fails:** Ensure site key (frontend) and secret key (backend) are from the same Turnstile widget
-- **Confirmation links broken:** Check `BASE_URL` is set to your Vercel deployment URL
+- **Confirmation links broken:** Check `BASE_URL` is set to your website URL (where confirmation pages live)
 
 **For more help:** See [docs/FAQ.md](docs/FAQ.md) for detailed troubleshooting and common questions.
 

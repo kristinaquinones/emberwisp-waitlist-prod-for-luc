@@ -252,7 +252,11 @@ See `the-widget/templates/TEMPLATE_README.md` for detailed instructions.
 
 **Professional and Branded templates support logos:**
 
-1. **Set your logo URL** in `the-widget/templates/config.js`:
+1. **Set your logo URL** via environment variable (recommended):
+   ```bash
+   EMAIL_LOGO_URL=https://yourdomain.com/logo.png
+   ```
+   Or in `the-widget/templates/config.js`:
    ```javascript
    logoUrl: "https://yourdomain.com/logo.png", // Recommended: 200px max width
    ```
