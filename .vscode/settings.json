@@ -1,0 +1,11 @@
+{
+  // Disable CSS validation in HTML files to prevent false positives from template variables
+  "[html]": {
+    "css.validate": false
+  },
+  // Also disable for specific template files
+  "files.associations": {
+    "**/templates/**/*.html": "html"
+  }
+}
+

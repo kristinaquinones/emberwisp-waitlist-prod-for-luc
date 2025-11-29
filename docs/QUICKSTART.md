@@ -134,11 +134,15 @@ npm install
      - Replace `hello@yourdomain.com` with an email from your verified Resend domain
    - `BASE_URL` → Enter your website URL: `https://yourdomain.com`
      - ⚠️ **Important:** This is your WEBSITE URL, NOT the Vercel API URL
+   - `API_URL` → (Optional) Enter your API domain if different from BASE_URL: `https://api.yourdomain.com`
+     - Only needed if your API is on a different domain than your main website
+     - If not set, defaults to `BASE_URL` (backward compatible)
+     - Example: If website is `www.lucette.app` and API is `a.lucette.app`, set `API_URL=https://a.lucette.app`
    - `CORS_ALLOWED_ORIGINS` → Enter your domains: `https://yourdomain.com,https://www.yourdomain.com`
      - Separate multiple domains with commas
 
 4. **Optional values (can leave as-is or blank):**
-   - Email branding (`EMAIL_PROJECT_NAME`, `EMAIL_PRIMARY_COLOR`, etc.) - can leave as-is, has defaults
+   - Email branding (`EMAIL_PROJECT_NAME`, `EMAIL_PRIMARY_COLOR`, `EMAIL_LOGO_URL`, `EMAIL_BRANDED_TEXT_ONLY`, etc.) - can leave as-is, has defaults
    - Optional features (`RESEND_AUDIENCE_ID`, `TURNSTILE_SECRET_KEY`, `UPSTASH_*`, etc.) - leave blank if not using
    - Redirect URLs - can leave as-is, rarely need to change
 
@@ -225,6 +229,7 @@ npm install
    - ✅ `SUPABASE_SERVICE_KEY`
    - ✅ `FROM_EMAIL`
    - ✅ `BASE_URL` (should be your website URL, set to Production only)
+   - ✅ `API_URL` (optional - only if API is on different domain than website)
    - ✅ `CORS_ALLOWED_ORIGINS` (should include your domains)
 
 **If anything is missing:**
@@ -623,6 +628,7 @@ Replace `0x4AAAAAAA...` with your actual site key from Cloudflare.
 ### Confirmation link doesn't work
 - Make sure `waitlist-confirmed.html`, `waitlist-error.html`, `unsubscribe-success.html`, and `unsubscribe-error.html` are in your site's root folder
 - Check that `BASE_URL` in Vercel matches your site's domain (and is set to Production environment)
+- If your API is on a different domain than your website, set `API_URL` to your API domain (e.g., `https://a.yourdomain.com`)
 - Verify the confirmation pages are deployed with your site
 
 ### Environment variables not working

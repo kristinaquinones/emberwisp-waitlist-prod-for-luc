@@ -610,6 +610,7 @@ EMAIL_PROJECT_NAME=Your Project
 EMAIL_SENDER_NAME=The Team
 EMAIL_PRIMARY_COLOR=#4f46e5
 EMAIL_LOGO_URL=https://yourdomain.com/logo.png
+EMAIL_BRANDED_TEXT_ONLY=true         # For branded templates: show text header instead of logo
 ```
 
 **Or edit `templates/config.js`** for detailed message customization.

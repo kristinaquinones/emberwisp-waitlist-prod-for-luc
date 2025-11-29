@@ -154,7 +154,7 @@ export default async function handler(req, res) {
           .update(updateData)
           .eq('id', existing.id);
         
-        await sendConfirmationEmail(normalizedEmail, token, APP_CONFIG.baseUrl);
+        await sendConfirmationEmail(normalizedEmail, token);
         
         return res.status(200).json({ 
           success: true,
@@ -201,7 +201,7 @@ export default async function handler(req, res) {
 
     // Send appropriate email
     if (FEATURES.doubleOptInEnabled) {
-      await sendConfirmationEmail(normalizedEmail, confirmationToken, APP_CONFIG.baseUrl);
+      await sendConfirmationEmail(normalizedEmail, confirmationToken);
       
       return res.status(200).json({ 
         success: true,
