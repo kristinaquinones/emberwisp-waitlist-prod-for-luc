@@ -261,6 +261,64 @@ Then redeploy: `vercel --prod`
 
 See `the-widget/templates/TEMPLATE_README.md` for detailed instructions.
 
+### How do I protect my customized templates from being overwritten when syncing from the main repo?
+
+**Use Git's `.gitattributes` file with the `merge=ours` strategy.**
+
+If you've customized email templates or styles and want to keep your changes when syncing updates from the main repository, create a `.gitattributes` file in the repository root:
+
+**1. Create `.gitattributes` file:**
+
+```bash
+# Protect entire templates folder from upstream merges
+the-widget/templates/** merge=ours
+```
+
+**2. Commit the file:**
+
+```bash
+git add .gitattributes
+git commit -m "Protect templates folder from upstream merges"
+```
+
+**3. Now when you sync from main:**
+
+```bash
+git fetch upstream  # or origin, depending on your setup
+git merge upstream/main  # Your templates won't be overwritten!
+```
+
+**How it works:**
+- `merge=ours` tells Git to always keep your local version during merges
+- Upstream changes to protected files won't overwrite your local changes
+- You can still see what changed upstream in the merge commit
+- Works for `git merge` and `git pull` (but not for `git rebase`)
+
+**Protect specific files only:**
+
+If you only want to protect certain files:
+
+```gitattributes
+# Protect specific files
+the-widget/templates/config.js merge=ours
+the-widget/templates/confirmation-email.html merge=ours
+the-widget/templates/welcome-email.html merge=ours
+```
+
+**Protect styles folder:**
+
+```gitattributes
+# Protect styles folder
+the-widget/templates/styles/** merge=ours
+```
+
+**Note:** If you ever want to accept upstream changes for a protected file, you can manually do:
+```bash
+git checkout --theirs the-widget/templates/some-file.html
+git add the-widget/templates/some-file.html
+git commit -m "Accept upstream changes for some-file.html"
+```
+
 ### How do I add a logo to my emails?
 
 **Professional and Branded templates support logos:**
