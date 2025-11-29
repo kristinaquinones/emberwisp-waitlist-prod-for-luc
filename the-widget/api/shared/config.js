@@ -28,6 +28,7 @@ export const DATABASE_CONFIG = {
 // Application configuration
 export const APP_CONFIG = {
   baseUrl: process.env.BASE_URL || 'https://yourdomain.com',
+  apiUrl: process.env.API_URL || process.env.BASE_URL || 'https://yourdomain.com', // API URL for endpoint links (defaults to baseUrl for backward compatibility)
   mainWebsiteUrl: process.env.MAIN_WEBSITE_URL || null, // Main site to redirect root URL to
   confirmSuccessUrl: process.env.CONFIRM_SUCCESS_URL || '/waitlist-confirmed',
   confirmErrorUrl: process.env.CONFIRM_ERROR_URL || '/waitlist-error',

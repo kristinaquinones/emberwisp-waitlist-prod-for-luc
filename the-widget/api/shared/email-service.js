@@ -4,7 +4,7 @@
 // modify the sendEmail() function below to use your chosen service's API.
 
 import { Resend } from 'resend';
-import { EMAIL_CONFIG } from './config.js';
+import { EMAIL_CONFIG, APP_CONFIG } from './config.js';
 import {
   getConfirmationEmailHtml,
   getConfirmationEmailText,
@@ -21,11 +21,10 @@ const resend = new Resend(EMAIL_CONFIG.resendApiKey);
  * Send confirmation email for double opt-in
  * @param {string} email - Recipient email address
  * @param {string} token - Confirmation token
- * @param {string} baseUrl - Base URL for confirmation link
  * @returns {Promise<void>}
  */
-export async function sendConfirmationEmail(email, token, baseUrl) {
-  const confirmUrl = `${baseUrl}/api/confirm?token=${token}`;
+export async function sendConfirmationEmail(email, token) {
+  const confirmUrl = `${APP_CONFIG.apiUrl}/api/confirm?token=${token}`;
   
   // ⚠️ RESEND-SPECIFIC: Replace this with your email service if not using Resend
   const { error } = await resend.emails.send({
