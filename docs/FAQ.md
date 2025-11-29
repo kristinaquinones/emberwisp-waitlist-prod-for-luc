@@ -104,7 +104,9 @@ vercel --prod
 
 ### Confirmation links show "Not Found" or don't work
 
-**Fix:** Make sure `BASE_URL` in Vercel matches your deployment URL exactly:
+**Fix:** 
+
+1. Make sure `BASE_URL` in Vercel matches your website URL (where confirmation pages live):
 
 ```bash
 vercel env ls
@@ -112,6 +114,17 @@ vercel env ls
 vercel env add BASE_URL production
 # Enter: https://yourwebsite.com
 ```
+
+2. If your API is on a different domain than your website, also set `API_URL`:
+
+```bash
+vercel env add API_URL production
+# Enter: https://api.yourdomain.com (or your API domain)
+```
+
+**Example:** If your website is `www.lucette.app` and API is `a.lucette.app`:
+- `BASE_URL=https://www.lucette.app` (for redirects to confirmation pages)
+- `API_URL=https://a.lucette.app` (for API endpoint links in emails)
 
 Then redeploy: `vercel --prod`
 
