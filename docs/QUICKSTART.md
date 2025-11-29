@@ -251,7 +251,7 @@ npm install
 
 **What you're doing:** You're copying files from this repository into your Jekyll site so the waitlist form can work. Think of it like adding a new feature to your website.
 
-**Files you need to copy:** 8 files total
+**Files you need to copy:** 9 files total
 
 ---
 
@@ -474,10 +474,9 @@ Replace `minimal` with the same value as your `EMAIL_TEMPLATE_STYLE` environment
 - You added the `{% include waitlist-form.html ... %}` line to at least one page
 - You replaced the API URL with your actual Vercel URL
 
-✅ **CSS/JS loaded:**
-- You added the three `<link>` and `<script>` lines to your layout file
-
 **If all checkboxes are checked, you're ready for the next step!**
+
+**Note:** CSS/JS files are automatically loaded by the included files and pages - no manual setup needed!
 
 ### For Other Frameworks
 
