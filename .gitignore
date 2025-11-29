@@ -53,10 +53,10 @@ playwright-report/
 # Local development
 .local/
 example_emails/
-generate-email-screenshots*.js
-generate_email_screenshots_steps.md
+# generate-email-screenshots*.js
+#generate_email_screenshots_steps.md
 node_modules
-docs/crm_planning.md
+docs/c*g.md
 docs/to-fix.md
 .vercel
 .env*.local
