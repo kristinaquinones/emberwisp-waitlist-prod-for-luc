@@ -112,8 +112,7 @@ function buildVariables(additionalVars = {}) {
   // Build compliance footer HTML (for welcome emails - disclosure + address + privacy policy)
   let complianceFooterHtml = '';
   const hasDisclosure = emailConfig.advertisementDisclosure && emailConfig.advertisementDisclosure.trim() !== '';
-  const hasAddress = emailConfig.senderAddress && emailConfig.senderAddress.trim() !== '';
-  const hasPrivacyPolicy = emailConfig.privacyPolicyUrl && emailConfig.privacyPolicyUrl.trim() !== '';
+  // hasAddress and hasPrivacyPolicy are already declared above - reuse them
   
   if (hasDisclosure || hasAddress || hasPrivacyPolicy) {
     let footerContent = '';
