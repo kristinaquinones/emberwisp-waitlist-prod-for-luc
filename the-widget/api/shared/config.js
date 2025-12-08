@@ -6,6 +6,7 @@
 // If you want to use a different email service, modify api/shared/email-service.js
 export const EMAIL_CONFIG = {
   fromEmail: process.env.FROM_EMAIL,
+  replyToEmail: process.env.REPLY_TO_EMAIL || null, // Optional reply-to address
   resendApiKey: process.env.RESEND_API_KEY,
 };
 

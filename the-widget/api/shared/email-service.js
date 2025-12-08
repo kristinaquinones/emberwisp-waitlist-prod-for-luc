@@ -27,13 +27,20 @@ export async function sendConfirmationEmail(email, token) {
   const confirmUrl = `${APP_CONFIG.apiUrl}/api/confirm?token=${token}`;
   
   // ⚠️ RESEND-SPECIFIC: Replace this with your email service if not using Resend
-  const { error } = await resend.emails.send({
+  const emailData = {
     from: EMAIL_CONFIG.fromEmail,
     to: email,
     subject: emailConfig.confirmationSubject,
     html: getConfirmationEmailHtml(confirmUrl),
     text: getConfirmationEmailText(confirmUrl),
-  });
+  };
+  
+  // Add reply-to if configured
+  if (EMAIL_CONFIG.replyToEmail) {
+    emailData.reply_to = EMAIL_CONFIG.replyToEmail;
+  }
+  
+  const { error } = await resend.emails.send(emailData);
 
   if (error) {
     console.error('Resend confirmation email error:', error);
@@ -49,13 +56,20 @@ export async function sendConfirmationEmail(email, token) {
  */
 export async function sendWelcomeEmail(email, unsubscribeToken = null) {
   // ⚠️ RESEND-SPECIFIC: Replace this with your email service if not using Resend
-  const { error } = await resend.emails.send({
+  const emailData = {
     from: EMAIL_CONFIG.fromEmail,
     to: email,
     subject: emailConfig.welcomeSubject,
     html: getWelcomeEmailHtml(unsubscribeToken, email),
     text: getWelcomeEmailText(unsubscribeToken, email),
-  });
+  };
+  
+  // Add reply-to if configured
+  if (EMAIL_CONFIG.replyToEmail) {
+    emailData.reply_to = EMAIL_CONFIG.replyToEmail;
+  }
+  
+  const { error } = await resend.emails.send(emailData);
 
   if (error) {
     console.error('Resend welcome email error:', error);
